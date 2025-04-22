@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rock Paper Scissors - Online</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="game-container">
+    <h1>Rock Paper Scissors</h1>
+    <div id="message">Connecting...</div>
+
+    <div class="players">
+      <div class="player" id="player1">
+        <h2>Player 1</h2>
+        <div id="player1-choice" class="choices">
+          <button class="choice" data-choice="rock">✊ Rock</button>
+          <button class="choice" data-choice="paper">✋ Paper</button>
+          <button class="choice" data-choice="scissors">✌️ Scissors</button>
+        </div>
+      </div>
+
+      <div class="player" id="player2">
+        <h2>Player 2</h2>
+        <div id="player2-choice" class="choices">
+          <button class="choice" data-choice="rock">✊ Rock</button>
+          <button class="choice" data-choice="paper">✋ Paper</button>
+          <button class="choice" data-choice="scissors">✌️ Scissors</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading-screen" style="display: none;">
+      <div class="loader">
+        <span id="loading-icon">✊</span>
+        <p>Waiting for opponent...</p>
+      </div>
+    </div>
+
+    <div class="result" id="result">Waiting for both players...</div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
