@@ -1,17 +1,4 @@
 from flask import Flask, render_template, request
-from flask_socketio import SocketIO
-import os
-
-app = Flask(__name__)
-socketio = SocketIO(app)
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
-from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -45,6 +32,8 @@ def handle_disconnect():
 @socketio.on('player-move')
 def handle_move(data):
     moves[data['player']] = data['move']
+    
+    # Once both players have made their moves, calculate the result
     if len(moves) == 2:
         p1 = moves[1]
         p2 = moves[2]
@@ -66,5 +55,5 @@ def get_result(p1, p2):
     else:
         return 'Player 2 Wins!'
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     socketio.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
