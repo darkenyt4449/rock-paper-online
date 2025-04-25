@@ -4,6 +4,8 @@ const player2Buttons = document.querySelectorAll('#player2 .choices button');
 const resultDiv = document.getElementById('result');
 const loadingScreen = document.getElementById('loading-screen');
 const loadingIcon = document.getElementById('loading-icon');
+const roomIdInput = document.getElementById('room-id');
+const joinRoomButton = document.getElementById('join-room');
 
 const loadingIcons = ['✊', '✋', '✌️'];
 let loadingInterval;
@@ -12,6 +14,7 @@ let loadingIndex = 0;
 let playerNumber = null;
 let player1Choice = null;
 let player2Choice = null;
+let roomId = null;
 
 function getWinner(p1, p2) {
   if (p1 === p2) return "It's a draw!";
@@ -40,7 +43,7 @@ function showLoading() {
   loadingInterval = setInterval(() => {
     loadingIndex = (loadingIndex + 1) % loadingIcons.length;
     loadingIcon.textContent = loadingIcons[loadingIndex];
-  }, 600); // change every 0.6 seconds
+  }, 600);
 }
 
 function hideLoading() {
@@ -52,7 +55,7 @@ player1Buttons.forEach(button => {
   button.addEventListener('click', () => {
     if (playerNumber === 1) {
       player1Choice = button.textContent.toLowerCase().split(' ')[1];
-      socket.emit('player-move', { player: 1, move: player1Choice });
+      socket.emit('player-move', { roomId: roomId, player: 1, move: player1Choice });
       resultDiv.textContent = "Player 1 has chosen. Waiting for Player 2...";
       showLoading();
     }
@@ -63,18 +66,26 @@ player2Buttons.forEach(button => {
   button.addEventListener('click', () => {
     if (playerNumber === 2) {
       player2Choice = button.textContent.toLowerCase().split(' ')[1];
-      socket.emit('player-move', { player: 2, move: player2Choice });
+      socket.emit('player-move', { roomId: roomId, player: 2, move: player2Choice });
       resultDiv.textContent = "Player 2 has chosen. Waiting for Player 1...";
       showLoading();
     }
   });
 });
 
+joinRoomButton.addEventListener('click', () => {
+  roomId = roomIdInput.value;
+  if (roomId) {
+    socket.emit('join-room', roomId);
+    resultDiv.textContent = `Joining Room ${roomId}...`;
+  }
+});
+
 socket.on('player-number', (num) => {
   playerNumber = num;
   if (playerNumber === 1) {
     resultDiv.textContent = "You are Player 1. You can make your move!";
-  }else if(playernumber === 2){
+  } else if (playerNumber === 2) {
     resultDiv.textContent = "You are Player 2. You can make your move!";
   }
 });
