@@ -33,7 +33,7 @@ function showLoading() {
   loadingInterval = setInterval(() => {
     loadingIndex = (loadingIndex + 1) % loadingIcons.length;
     loadingIcon.textContent = loadingIcons[loadingIndex];
-  }, 600); // change every 0.6 seconds
+  }, 600);
 }
 
 function hideLoading() {
@@ -44,16 +44,15 @@ function hideLoading() {
 function resetGame() {
   player1Choice = null;
   player2Choice = null;
-  resultDiv.textContent = 'Game reset. Waiting for players...';
-  // Optionally reset any other UI elements or allow players to choose again
+  resultDiv.textContent = "Game reset. Waiting for next round...";
 }
 
 player1Buttons.forEach(button => {
   button.addEventListener('click', () => {
-    if (playerNumber === 1 && player2Choice === null) {
+    if (playerNumber === 1 && !player1Choice) {
       player1Choice = button.textContent.toLowerCase().split(' ')[1];
       socket.emit('player-move', { player: 1, move: player1Choice });
-      resultDiv.textContent = "Player 1 has chosen. Waiting for Player 2...";
+      resultDiv.textContent = "You chose. Waiting for Player 2...";
       showLoading();
     }
   });
@@ -61,36 +60,28 @@ player1Buttons.forEach(button => {
 
 player2Buttons.forEach(button => {
   button.addEventListener('click', () => {
-    if (playerNumber === 2 && player1Choice !== null) {
+    if (playerNumber === 2 && !player2Choice) {
       player2Choice = button.textContent.toLowerCase().split(' ')[1];
       socket.emit('player-move', { player: 2, move: player2Choice });
-      hideLoading();
-      resultDiv.textContent = "Player 2 has chosen. Waiting for results...";
+      resultDiv.textContent = "You chose. Waiting for Player 1...";
+      showLoading();
     }
   });
 });
 
 socket.on('player-number', (num) => {
   playerNumber = num;
-  if (playerNumber === 1) {
-    resultDiv.textContent = "You are Player 1. Waiting for Player 2 to join...";
-  } else if (playerNumber === 2) {
-    resultDiv.textContent = "You are Player 2. Waiting for Player 1 to make a move...";
-  }
 });
 
-socket.on('game-message', (message) => {
-  resultDiv.textContent = message;
+socket.on('game-message', (msg) => {
+  resultDiv.textContent = msg;
 });
 
 socket.on('game-result', (data) => {
-  player1Choice = data.move1;
-  player2Choice = data.move2;
-  const winnerText = getWinner(player1Choice, player2Choice);
-  resultDiv.textContent = `${winnerText} Player 1 chose ${player1Choice} and Player 2 chose ${player2Choice}.`;
-
-  // Optionally reset the game or wait for players to rejoin
-  setTimeout(resetGame, 3000); // Reset after 3 seconds
+  hideLoading();
+  const winnerText = data.result;
+  resultDiv.textContent = `${winnerText} Player 1 chose ${data.move1}, Player 2 chose ${data.move2}.`;
+  setTimeout(resetGame, 3000);
 });
 
 socket.on('room-full', () => {
