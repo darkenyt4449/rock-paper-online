@@ -6,6 +6,7 @@ socketio = SocketIO(app)
 
 players = {}
 moves = {}
+replay_votes = set()
 
 @app.route('/')
 def index():
@@ -27,13 +28,13 @@ def handle_disconnect():
         if sid == request.sid:
             del players[player]
             moves.clear()
+            replay_votes.clear()
             socketio.emit('waiting')
 
 @socketio.on('player-move')
 def handle_move(data):
     moves[data['player']] = data['move']
     
-    # Once both players have made their moves, calculate the result
     if len(moves) == 2:
         p1 = moves[1]
         p2 = moves[2]
@@ -44,6 +45,19 @@ def handle_move(data):
             'result': result
         })
         moves.clear()
+
+@socketio.on('replay-request')
+def handle_replay():
+    sid = request.sid
+    for num, player_sid in players.items():
+        if player_sid == sid:
+            replay_votes.add(num)
+
+    if len(replay_votes) == 2:
+        replay_votes.clear()
+        socketio.emit('replay-start')
+    else:
+        emit('waiting-replay')
 
 def get_result(p1, p2):
     if p1 == p2:
