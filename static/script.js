@@ -65,7 +65,7 @@ player2Buttons.forEach(button => {
       player2Choice = button.textContent.toLowerCase().split(' ')[1];
       socket.emit('player-move', { player: 2, move: player2Choice });
       resultDiv.textContent = "Player 2 has chosen. Waiting for Player 1...";
-      showLoading();
+      hideLoading();
     }
   });
 });
@@ -84,7 +84,6 @@ socket.on('game-result', (data) => {
   player2Choice = data.move2;
   const winnerText = getWinner(player1Choice, player2Choice);
   resultDiv.textContent = winnerText;
-  hideLoading();
 });
 
 socket.on('room-full', () => {
