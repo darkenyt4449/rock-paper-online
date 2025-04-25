@@ -5,6 +5,8 @@ const resultDiv = document.getElementById('result');
 const replayButton = document.getElementById('replay-button');
 const loadingScreen = document.getElementById('loading-screen');
 const loadingIcon = document.getElementById('loading-icon');
+const overlay = document.getElementById('overlay');
+const finalResultText = document.getElementById('final-result-text');
 
 const loadingIcons = ['✊', '✋', '✌️'];
 let loadingInterval;
@@ -13,40 +15,7 @@ let loadingIndex = 0;
 let playerNumber = null;
 let player1Choice = null;
 let player2Choice = null;
-
-
 let replayRequested = false;
-
-replayButton.addEventListener('click', () => {
-  socket.emit('replay-request');
-  replayRequested = true;
-  replayButton.disabled = true;
-  resultDiv.textContent = "Waiting for other player to accept replay...";
-});
-
-// Show replay button after game result
-socket.on('game-result', (data) => {
-  hideLoading();
-  const winnerText = data.result;
-  resultDiv.textContent = `${winnerText} Player 1 chose ${data.move1}, Player 2 chose ${data.move2}.`;
-  replayButton.style.display = 'inline-block';
-  replayButton.disabled = false;
-  replayRequested = false;
-});
-
-// If both players accept replay
-socket.on('replay-start', () => {
-  player1Choice = null;
-  player2Choice = null;
-  resultDiv.textContent = "New round started! Make your move!";
-  replayButton.style.display = 'none';
-  replayRequested = false;
-});
-
-// If only one accepted replay
-socket.on('waiting-replay', () => {
-  resultDiv.textContent = "You accepted replay. Waiting for the other player...";
-});
 
 function getWinner(p1, p2) {
   if (p1 === p2) return "It's a draw!";
@@ -79,7 +48,10 @@ function hideLoading() {
 function resetGame() {
   player1Choice = null;
   player2Choice = null;
-  resultDiv.textContent = "Game reset. Waiting for next round...";
+  replayRequested = false;
+  replayButton.disabled = false;
+  overlay.style.display = 'none';
+  resultDiv.textContent = "New round started! Make your move!";
 }
 
 player1Buttons.forEach(button => {
@@ -104,6 +76,8 @@ player2Buttons.forEach(button => {
   });
 });
 
+// --- Socket Events ---
+
 socket.on('player-number', (num) => {
   playerNumber = num;
 });
@@ -114,9 +88,31 @@ socket.on('game-message', (msg) => {
 
 socket.on('game-result', (data) => {
   hideLoading();
-  const winnerText = data.result;
-  resultDiv.textContent = `${winnerText}`;
-  setTimeout(resetGame, 3000);
+  player1Choice = data.move1;
+  player2Choice = data.move2;
+
+  const winnerText = getWinner(player1Choice, player2Choice);
+  finalResultText.textContent = `${winnerText} Player 1 chose ${player1Choice}, Player 2 chose ${player2Choice}.`;
+  overlay.style.display = 'flex';
+  replayButton.style.display = 'inline-block';
+});
+
+// When replay is requested
+replayButton.addEventListener('click', () => {
+  socket.emit('replay-request');
+  replayRequested = true;
+  replayButton.disabled = true;
+  finalResultText.textContent = "Waiting for other player to accept replay...";
+});
+
+// If both players accept replay
+socket.on('replay-start', () => {
+  resetGame();
+});
+
+// If only one player accepts
+socket.on('waiting-replay', () => {
+  finalResultText.textContent = "You accepted replay. Waiting for the other player...";
 });
 
 socket.on('room-full', () => {
