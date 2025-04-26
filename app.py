@@ -17,22 +17,34 @@ def handle_connect():
         emit('room-full')
         return
 
+    # Assign player number
     player_num = 1 if 1 not in players else 2
     players[player_num] = request.sid
     emit('player-number', player_num)
 
+    # Notify the new player if they are Player 1 or Player 2
+    if player_num == 1:
+        emit('game-message', 'You are Player 1. Waiting for Player 2 to join...')
+    else:
+        emit('game-message', 'You are Player 2. Waiting for Player 1 to make a move...')
+
 @socketio.on('disconnect')
 def handle_disconnect():
+    # Remove player from the dictionary on disconnect
     for player, sid in list(players.items()):
         if sid == request.sid:
             del players[player]
-            moves.clear()
-            socketio.emit('waiting')
+            break
+
+    moves.clear()
+
+    # Notify all players that someone has left
+    socketio.emit('game-message', 'A player has disconnected. Waiting for a new player...')
 
 @socketio.on('player-move')
 def handle_move(data):
     moves[data['player']] = data['move']
-    
+
     # Once both players have made their moves, calculate the result
     if len(moves) == 2:
         p1 = moves[1]
