@@ -48,10 +48,9 @@ def handle_move(data):
 
 @socketio.on('replay-request')
 def handle_replay():
-    sid = request.sid
-    for num, player_sid in players.items():
-        if player_sid == sid:
-            replay_votes.add(num)
+    for player, sid in players.items():
+        if sid == request.sid:
+            replay_votes.add(player)
 
     if len(replay_votes) == 2:
         replay_votes.clear()
